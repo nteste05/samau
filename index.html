@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="canonical" href="https://nteste05.github.io/samau/" />
+    <link rel="icon" type="image/jpeg" href="samau-favicon.jpeg" sizes="32x32">
+    <link rel="apple-touch-icon" sizes="180x180" href="samau-favicon.jpeg">
+    <link rel="manifest" href="manifest.json">
+    
+    <title>SamAu: Aplikasi Menyambungkan Audio Secara Instan di Browser</title>
+    <meta name="description" content="Gabungkan hingga 5 file audio secara instan dengan SamAu. Proses 100% di browser, tanpa upload ke server, aman, dan gratis. Coba penyambung audio privat ini!">
+    <meta name="keywords" content="SamAu, Sambung audio, Gabung audio, Audio joiner, Merge audio online">
+    <meta name="robots" content="index, follow">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nteste05.github.io/samau">
+    <meta property="og:title" content="SamAu: Aplikasi Menyambungkan Audio Secara Instan di Browser">
+    <meta property="og:description" content="Gabungkan hingga 5 file audio secara instan dengan SamAu. Proses 100% di browser, tanpa upload ke server, aman, dan gratis. Coba penyambung audio privat ini!">
+    <meta property="og:image" content="https://raw.githubusercontent.com/nteste05/samau/refs/heads/main/samau-thumb.jpeg">
+    
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://nteste05.github.io/samau">
+    <meta property="twitter:title" content="SamAu: Aplikasi Menyambungkan Audio Secara Instan di Browser">
+    <meta property="twitter:description" content="Gabungkan hingga 5 file audio secara instan dengan SamAu. Proses 100% di browser, tanpa upload ke server, aman, dan gratis. Coba penyambung audio privat ini!">
+    <meta property="twitter:image" content="https://raw.githubusercontent.com/nteste05/samau/refs/heads/main/samau-thumb.jpeg">
+    
+    <script src="lame.min.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #10b981;
+            --accent: #f43f5e;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+        }
+        * {box-sizing: border-box;}
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0 15px;
+            display: flex;
+            flex-direction: column;
+            align-content: center;
+            min-height: 100vh;
+        }
+        .app-container {
+            background: var(--card);
+            max-width: 600px;
+            padding: 1rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
+        }
+        .audio-card {
+            background: #334155;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-left: 5px solid #3498db;
+        }
+        canvas {
+            background: #0f172a;
+            width: 100%;
+            height: 60px;
+            border-radius: 0.5rem;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .controls2 {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 20px 10px;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-preview { background: #3498db; color: white; }
+        .btn-preview:hover { background: #4498db; }
+        .btn-proses { background: var(--primary); color: white; }
+        .btn-proses:hover { opacity: 0.9; }
+        button:disabled { background: #555; cursor: not-allowed; opacity: 0.6; }
+        
+        input[type="file"] {
+            width: 80%;
+            color: white;
+            outline: none;
+            border: 2px dashed #475569;
+            border-radius: 1rem;
+            padding: 10px;
+            text-align: center;
+        }
+        @media screen and (min-width: 769px) {
+            body {width: 100%; align-items: center}
+            .app-container { padding: 1.2rem; }
+        }
+        
+        .navbar {
+            padding: 20px 0;
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: #bbb;
+            font-size: 24px;
+            cursor: pointer;
+            margin: 0 20px 0 0;
+        }
+
+        header h1 {
+            font-size: 16px;
+            margin:0;
+        }
+
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 2000;
+            top: 0;
+            left: 0;
+            background-color: var(--bg);
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 10px;
+        }
+
+        .sidebar a {
+            padding: 15px 30px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            color: #ccc;
+            display: block;
+            transition: 0.2s;
+            border-bottom: 1px solid #bbb;
+        }
+
+        .sidebar a:hover {
+            color: #818cf8;
+            background-color: var(--card);
+        }
+
+        .sidebar .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 36px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .overlaynav {
+            display: none;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1500;
+        }
+        
+        .visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+        footer {
+            font-size: 12px;
+            padding: 10px;
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="mySidebar" class="sidebar">
+        <span class="close-btn" onclick="closeNav()">&times;</span>
+        <a href="https://nteste05.github.io/gemii/" onclick="closeNav()">👽 Lainnya</a>
+    </div>
+    <div id="overlaynav" class="overlaynav" onclick="closeNav()"></div>
+    <nav class="navbar">
+        <div class="menu-btn" onclick="openNav()">&#9776;</div>
+        <header><h1>SamAu: Aplikasi Menyambungkan Audio</h1></header>
+    </nav>
+    <div class="app-container">
+        <p>*) File tidak dikirim ke server. Semua proses terjadi di browser Anda.</p>
+        <canvas id="visualizer"></canvas>
+        <button id="btnAdd" style="margin-bottom: 20px">🎛 Tambah Audio</button>
+        <div id="audioInputs">
+            <div class="audio-card">
+                <label>Audio 1:</label>
+                <input type="file" id="file1" class="audio-file" accept="audio/*,.mp3,.wav,.webm">
+            </div>
+            <div class="audio-card" style="border-left-color: #e74c3c;">
+                <label>Audio 2:</label>
+                <input type="file" id="file2" class="audio-file" accept="audio/*,.mp3,.wav,.webm">
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn-preview" onclick="togglePreview()" id="playBtn">▶️ Putar Preview</button>
+            <div class="controls2">
+                <button class="btn-proses" id="btnWebM" style="flex:1;">Proses ke (WebM)</button>
+                <button class="btn-proses" id="btnMP3" style="flex:1; background: #8b5cf6;">Proses ke (MP3)</button>
+            </div>
+            <button id="btnDownload" disabled>💾 Download Hasil</button>
+        </div>
+        <p id="status" style="text-align: center; color: #aaa; margin-top: 10px;"></p>
+    </div>
+    
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        if (typeof lamejs === 'undefined') {
+            alert("⚠️ File 'lame.min.js' tidak ditemukan!\n\nProses ke MP3 tidak akan berfungsi.");
+            document.getElementById('btnMP3').disabled = true;
+            document.getElementById('btnMP3').style.opacity = "0.5";
+        }
+    });
+    
+    let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let currentSource = null;
+    let isPlaying = false;
+    let resultBlob = null;
+    const canvas = document.getElementById('visualizer');
+    const ctx = canvas.getContext('2d');
+    
+    document.getElementById('btnAdd').onclick = function() {
+        const container = document.getElementById('audioInputs');
+        const count = container.getElementsByClassName('audio-card').length;
+        if (count < 5) {
+            const div = document.createElement('div');
+            div.className = 'audio-card';
+            div.style.borderLeftColor = ['#f1c40f', '#9b59b6', '#1abc9c'][count-2];
+            div.innerHTML = `<label>Audio ${count + 1}:</label> <input type="file" class="audio-file" accept="audio/*,.mp3,.wav,.webm">`;
+            container.appendChild(div);
+        } else {
+            alert("Maksimal 5 audio");
+        }
+    };
+    
+    async function mergeAudio() {
+        const inputs = document.querySelectorAll('.audio-file');
+        let buffers = [];
+        for (let input of inputs) {
+            if (input.files[0]) {
+                const arrayBuf = await input.files[0].arrayBuffer();
+                const decoded = await audioCtx.decodeAudioData(arrayBuf);
+                buffers.push(decoded);
+            }
+        }
+        if (buffers.length === 0) return null;
+
+        let totalLen = buffers.reduce((acc, b) => acc + b.length, 0);
+        let out = audioCtx.createBuffer(buffers[0].numberOfChannels, totalLen, buffers[0].sampleRate);
+        
+        for (let i = 0; i < out.numberOfChannels; i++) {
+            let offset = 0;
+            for (let b of buffers) {
+                out.getChannelData(i).set(b.getChannelData(i), offset);
+                offset += b.length;
+            }
+        }
+        return out;
+    }
+    
+    function startVisualizer(source) {
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        function draw() {
+            if (!isPlaying) return ctx.clearRect(0, 0, canvas.width, canvas.height);
+            requestAnimationFrame(draw);
+            analyser.getByteFrequencyData(dataArray);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            let x = 0;
+            for(let i = 0; i < dataArray.length; i++) {
+                let barHeight = dataArray[i]/2;
+                ctx.fillStyle = `rgb(79, 70, 229)`;
+                ctx.fillRect(x, canvas.height - barHeight, (canvas.width/dataArray.length)*2.5, barHeight);
+                x += (canvas.width/dataArray.length)*2.5 + 1;
+            }
+        }
+        draw();
+    }
+    
+    async function togglePreview() {
+        if (isPlaying) {
+            currentSource.stop();
+            isPlaying = false;
+            document.getElementById('playBtn').innerText = "▶️ Putar Preview";
+            document.getElementById('status').innerText = "Berhenti Memutar Preview";
+            return;
+        }
+        const merged = await mergeAudio();
+        if (!merged) return alert("Pilih file audio dulu!");
+
+        currentSource = audioCtx.createBufferSource();
+        currentSource.buffer = merged;
+        isPlaying = true;
+        document.getElementById('playBtn').innerText = "⏹️ Berhenti";
+        document.getElementById('status').innerText = "Memutar Preview...";
+        startVisualizer(currentSource);
+        currentSource.start();
+        currentSource.onended = () => {
+            isPlaying = false;
+            document.getElementById('playBtn').innerText = "▶️ Putar Preview";
+            document.getElementById('status').innerText = "Berhenti Memutar Preview";
+        };
+    }
+    
+    document.getElementById('btnWebM').onclick = async () => {
+        const merged = await mergeAudio();
+        if (!merged) return alert("Pilih file audio dulu!");
+        const dest = audioCtx.createMediaStreamDestination();
+        const source = audioCtx.createBufferSource();
+        source.buffer = merged;
+        source.connect(dest);
+        const recorder = new MediaRecorder(dest.stream);
+        const chunks = [];
+        recorder.ondataavailable = e => chunks.push(e.data);
+        recorder.onstop = () => {
+            resultBlob = new Blob(chunks, {type: 'audio/webm'});
+            enableDownload("SamAu-nteste05.webm");
+        };
+        recorder.start();
+        source.start();
+        source.onended = () => recorder.stop();
+        document.getElementById('status').innerText = "Memproses WebM...";
+    };
+    
+    document.getElementById('btnMP3').onclick = async () => {
+        const merged = await mergeAudio();
+        if (!merged) return alert("Pilih file audio dulu!");
+        document.getElementById('status').innerText = "Memproses MP3...";
+        
+        const mp3encoder = new lamejs.Mp3Encoder(1, merged.sampleRate, 128);
+        const samples = merged.getChannelData(0);
+        const int16 = new Int16Array(samples.length);
+        for(let i=0; i<samples.length; i++) {
+            int16[i] = samples[i] < 0 ? samples[i] * 0x8000 : samples[i] * 0x7FFF;
+        }
+        
+        const mp3Data = [];
+        for (let i = 0; i < int16.length; i += 1152) {
+            let chunk = int16.subarray(i, i + 1152);
+            let mp3buf = mp3encoder.encodeBuffer(chunk);
+            if (mp3buf.length > 0) mp3Data.push(new Uint8Array(mp3buf));
+        }
+        mp3Data.push(new Uint8Array(mp3encoder.flush()));
+        resultBlob = new Blob(mp3Data, {type: 'audio/mp3'});
+        enableDownload("SamAu-nteste05.mp3");
+    };
+
+    function enableDownload(name) {
+        document.getElementById('status').innerText = "Proses Selesai!";
+        const btn = document.getElementById('btnDownload');
+        btn.disabled = false;
+        btn.onclick = () => {
+            const url = URL.createObjectURL(resultBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            a.click();
+        };
+    }
+    
+    const sidebar = document.getElementById("mySidebar");
+    const overlaynav = document.getElementById("overlaynav");
+    
+    function openNav() {
+        sidebar.style.width = "280px";
+        overlaynav.style.display = "block";
+        document.body.style.overflow = "hidden";
+    }
+    
+    function closeNav() {
+        sidebar.style.width = "0";
+        overlaynav.style.display = "none";
+        // Mengembalikan scroll body
+        document.body.style.overflow = "auto";
+    }
+</script>
+<footer>
+    <p class="visually-hidden">SamAu: Cara Termudah Menyambungkan Audio Secara Instan dan Aman di Browser<br><br>Apakah Anda sering merasa kesulitan saat ingin menggabungkan beberapa file rekaman suara, potongan musik, atau podcast? Kini hadir SamAu, solusi cerdas dan praktis untuk <strong>menyambungkan audio</strong> hingga 5 file sekaligus tanpa perlu mengunduh perangkat lunak yang berat. Dengan teknologi pemrosesan modern, SamAu menawarkan pengalaman mengedit audio yang cepat, gratis, dan yang paling penting: sepenuhnya privat.</p>
+    <p class="visually-hidden">Mengapa Memilih SamAu untuk Menggabungkan Audio?<br>Di era digital saat ini, privasi data adalah segalanya. Banyak <strong>layanan penggabung audio online</strong> mengharuskan Anda mengunggah file ke server mereka, yang berisiko terhadap keamanan data pribadi Anda. SamAu hadir dengan konsep yang berbeda.<br>Aplikasi ini menggunakan teknologi Client-Side Processing. Artinya, semua file audio yang Anda pilih tidak pernah diunggah ke server kami. Seluruh proses penggabungan terjadi langsung di dalam browser Anda. Hal ini tidak hanya membuat proses menjadi jauh lebih cepat karena tidak ada waktu tunggu upload, tetapi juga menjamin bahwa file Anda tetap berada di tangan Anda sendiri.</p>
+    <p class="visually-hidden">Fitur Unggulan SamAu<br>Gabungkan Hingga 5 File: SamAu dirancang untuk efisiensi. Anda dapat memilih hingga 5 file audio (seperti MP3, WAV, atau OGG) dan menyambungkannya menjadi satu file utuh hanya dengan beberapa klik.<br>Tanpa Upload, Tanpa Ribet: Karena diproses di sisi klien, Anda tidak perlu khawatir tentang batasan ukuran file saat mengunggah atau koneksi internet yang lambat yang seringkali memutus proses edit di tengah jalan.<br>Privasi Terjamin 100%: File Anda adalah milik Anda. SamAu tidak menyimpan salinan apa pun di server, menjadikannya pilihan paling aman untuk mengedit audio sensitif atau pribadi.<br>Tampilan Antarmuka yang Sederhana: Kami percaya bahwa teknologi hebat haruslah mudah digunakan. <strong>SamAu</strong> memiliki desain yang intuitif sehingga siapa pun, mulai dari pelajar hingga profesional, bisa langsung menggunakannya tanpa perlu tutorial panjang.<br>Hasil Kualitas Tinggi: Meskipun prosesnya cepat dan dilakukan di browser, hasil akhir audio tetap menjaga kualitas asli dari file-file yang Anda gabungkan.</p>
+    <p class="visually-hidden">Cara Menggunakan SamAu. Menggunakan SamAu semudah menghitung satu sampai tiga:<br>Langkah 1: Buka aplikasi SamAu di browser favorit Anda (Chrome, Firefox, Safari, atau Edge).<br>Langkah 2: Pilih atau tarik (drag-and-drop) hingga 5 file audio yang ingin Anda sambungkan.<br>Langkah 3: Atur urutan file sesuai keinginan, lalu klik tombol "Proses ke WebM" atau "Proses ke MP3" untuk hasil format file yang berbeda . Dalam hitungan detik, file audio baru Anda siap diunduh!</p>
+    <p class="visually-hidden">Solusi Sempurna untuk Berbagai Kebutuhan. SamAu adalah alat yang ideal bagi:<br>Podcaster: Menggabungkan intro, konten utama, dan outro dengan cepat.<br>Pelajar & Mahasiswa: Menyambungkan potongan rekaman kuliah agar lebih mudah dipelajari.<br>Content Creator: Membuat kompilasi audio untuk latar belakang video atau media sosial.<br>Penggunaan Harian: Sekadar ingin menyatukan lagu-lagu favorit menjadi satu medley yang panjang.</p>
+    <p class="visually-hidden">Jangan biarkan proses <strong>edit audio</strong> yang rumit menghambat produktivitas Anda. Dengan SamAu, Anda mendapatkan kecepatan, kemudahan, dan keamanan dalam satu paket aplikasi web yang ringan. Cobalah SamAu sekarang dan rasakan pengalaman menyambungkan audio yang benar-benar privat, langsung dari browser Anda!</p>
+    <p>&copy; 2026 <a style="color: inherit; text-decoration: none;" href="https://nteste05.github.io/samau/">SamAu: Aplikasi Menyambungkan Audio Secara Instan di Browser.</a> All Rights Reserved.</p>
+</footer>
+</body>
+</html>
